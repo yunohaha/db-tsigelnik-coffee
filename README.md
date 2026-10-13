@@ -43,22 +43,60 @@ dbcheck run demo/lab1.sql     # сценарий лабы 1
 ## ER-диаграмма
 
 <!-- Замените пример своими таблицами: 5+ таблиц, связь N:M через связующую таблицу. -->
+<!-- || — ровно один
+o{ — ноль или много
+|{ — один или много
+-->
 
 ```mermaid
 erDiagram
-    films ||--o{ sessions : "показывают"
-    halls ||--o{ sessions : "проходит в"
-    sessions ||--o{ tickets : "продано"
-    films ||--o{ film_genres : ""
-    genres ||--o{ film_genres : ""
+    coffee_shops ||--o{ baristas : "нанимают"
+    coffee_shops ||--o{ orders : "принимают"
+    baristas ||--o{ orders : "оформляют"
+    orders ||--|{ order_items : "содержат"
+    menu_items ||--o{ order_items : "входят в"
+    coffee_shops ||--o{ inventory : "хранят"
 
-    films {
+    coffee_shops {
         int id PK
-        text title
+        text name
+        text address
     }
-    film_genres {
-        int film_id PK, FK
-        int genre_id PK, FK
+    baristas {
+      int barista_id PK
+      int cofee_shop_id FK
+      text full_name
+    }
+    orders{
+      int id PK
+      int coffee_shop_id FK
+      int barista_id FK
+      timestamp created_at
+      text status
+    }
+    menu_items{
+      int id PK
+      text name
+      numeric price
+      numeric milk_required_ml
+      numeric coffee_required_g
+      numeric sugar_required_g
+
+    }
+    order_items {
+      int id PK
+      int order_id FK
+      int menu_item_id FK
+      int quantity
+      numeric price_at_order
+    }
+
+    inventory{
+      int id PK
+      int coffee_shop_id FK
+      text product_name
+      numeric quantity
+      text unit
     }
 ```
 
@@ -66,9 +104,11 @@ erDiagram
 
 | Ограничение | Таблица и колонки | Зачем |
 | --- | --- | --- |
-| `UNIQUE` | ... | ... |
-| `CHECK` | ... | ... |
-
+| `PRIMARY KEY` |	Все таблицы |Уникальный ключ, на который могут ссылаться внешние ключи (FK) других таблиц |
+| `FOREIGN KEY` | `cofee_shop_id`, `orders.coffee_shop_id`, `orders.barista_id`, `order_items.order_id`, `order_items.menu_item_id`, `inventory.coffee_shop_id` | Связь с существующими записями|
+| `UNIQUE` | `coffee_shops.name`, `inventory.coffee_shop_id, inventory.product_name` (составное ограничение)  | Не допускает дублирования|
+| `CHECK` | `menu_items.price > 0`, `order_items.price_at_order >= 0`, `inventory.quantity >= 0` | Ограничения |
+| `NOT NULL` | `orders.coffee_shop_id`, `orders.barista_id`, `orders.created_at`, `orders.status`, `menu_items.name`, `menu_items.price`, `order_items.order_id`, `order_items.menu_item_id`, `order_items.quantity`, `order_items.price_at_order`, `inventory.coffee_shop_id`, `inventory.product_name`, `inventory.quantity`, `inventory.unit` | Не может быть пустым|
 ## Что сделано по лабам
 
 | Лаба | Что сделано | Сценарий |
