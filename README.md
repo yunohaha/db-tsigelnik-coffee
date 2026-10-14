@@ -43,22 +43,60 @@ dbcheck run demo/lab1.sql     # сценарий лабы 1
 ## ER-диаграмма
 
 <!-- Замените пример своими таблицами: 5+ таблиц, связь N:M через связующую таблицу. -->
+<!-- || — ровно один
+o{ — ноль или много
+|{ — один или много
+-->
 
 ```mermaid
 erDiagram
-    films ||--o{ sessions : "показывают"
-    halls ||--o{ sessions : "проходит в"
-    sessions ||--o{ tickets : "продано"
-    films ||--o{ film_genres : ""
-    genres ||--o{ film_genres : ""
+    coffee_shops ||--o{ baristas : "нанимают"
+    coffee_shops ||--o{ orders : "принимают"
+    baristas ||--o{ orders : "оформляют"
+    orders ||--|{ order_items : "содержат"
+    menu_items ||--o{ order_items : "входят в"
+    coffee_shops ||--o{ inventory : "хранят"
 
-    films {
+    coffee_shops {
         int id PK
-        text title
+        text name
+        text address
     }
-    film_genres {
-        int film_id PK, FK
-        int genre_id PK, FK
+    baristas {
+      int id PK
+      int cofee_shop_id FK
+      text full_name
+    }
+    orders{
+      int id PK
+      int coffee_shop_id FK
+      int barista_id FK
+      timestamp created_at
+      text status
+    }
+    menu_items{
+      int id PK
+      text name
+      numeric price
+      numeric milk_required_ml
+      numeric coffee_required_g
+      numeric sugar_required_g
+
+    }
+    order_items {
+      int id PK
+      int order_id FK
+      int menu_item_id FK
+      int quantity
+      numeric price_at_order
+    }
+
+    inventory{
+      int id PK
+      int coffee_shop_id FK
+      text product_name
+      numeric quantity
+      text unit
     }
 ```
 
@@ -66,14 +104,65 @@ erDiagram
 
 | Ограничение | Таблица и колонки | Зачем |
 | --- | --- | --- |
-| `UNIQUE` | ... | ... |
-| `CHECK` | ... | ... |
+| `PRIMARY KEY` |	Все таблицы |Уникальный ключ, на который могут ссылаться внешние ключи (FK) других таблиц |
+| `FOREIGN KEY` | `cofee_shop_id`, `orders.coffee_shop_id`, `orders.barista_id`, `order_items.order_id`, `order_items.menu_item_id`, `inventory.coffee_shop_id` | Связь с существующими записями|
+| `UNIQUE` | `coffee_shops.name`, `inventory.coffee_shop_id, inventory.product_name` (составное ограничение)  | Не допускает дублирования|
+| `CHECK` | `menu_items.price > 0`, `order_items.price_at_order >= 0`, `inventory.quantity >= 0` | Ограничения |
+| `NOT NULL` | `orders.coffee_shop_id`, `orders.barista_id`, `orders.created_at`, `orders.status`, `menu_items.name`, `menu_items.price`, `order_items.order_id`, `order_items.menu_item_id`, `order_items.quantity`, `order_items.price_at_order`, `inventory.coffee_shop_id`, `inventory.product_name`, `inventory.quantity`, `inventory.unit` | Не может быть пустым|
+
+## Нормализация
+
+Нормализация — это разделение данных на связанные таблицы, чтобы убрать повторы и избежать ошибок при изменении данных.
+
+### Исходная таблица
+
+Все данные хранятся в одной таблице, поэтому адрес кофейни и имя бариста повторяются в каждом заказе.
+
+| Заказ | Кофейня | Адрес | Бариста | Напиток |
+|---|---|---|---|---|
+| 1 | Центральная | ул. Ленина, 1 | Анна Иванова | Капучино |
+| 2 | Центральная | ул. Ленина, 1 | Анна Иванова | Латте |
+
+Если адрес изменится, его придётся менять в нескольких строках.
+
+### 1НФ — одно значение в ячейке
+
+В каждой ячейке хранится одно значение. Несколько напитков одного заказа записываются отдельными строками.
+
+| Заказ | Напиток | Количество |
+|---|---|---:|
+| 1 | Капучино | 2 |
+| 1 | Латте | 1 |
+
+### 2НФ — данные зависят от всего ключа
+
+Информация о заказе и напитках разделяется. Для позиций заказа создаётся отдельная таблица `order_items`.
+
+| order_id | menu_item_id | quantity |
+|---:|---:|---:|
+| 1 | 3 | 2 |
+| 1 | 4 | 1 |
+
+### 3НФ — каждый вид данных хранится отдельно
+
+Данные о кофейнях, бариста и напитках выносятся в отдельные таблицы. Заказы ссылаются на них через внешние ключи.
+
+| Таблица | Что хранит |
+|---|---|
+| `coffee_shops` | Название и адрес кофейни |
+| `baristas` | Имя бариста и его кофейню |
+| `menu_items` | Название и цену напитка |
+| `orders` | Информацию о заказах |
+| `order_items` | Напитки внутри заказов |
+| `inventory` | Остатки продуктов |
+
+**Результат:** данные не приходится дублировать во множестве строк, а изменения можно выполнять в одном месте.
 
 ## Что сделано по лабам
 
 | Лаба | Что сделано | Сценарий |
 | --- | --- | --- |
-| 1 | ... | `demo/lab1.sql` |
+| 1 | Создана ER-диаграмма сети кофеен, разработана схема из 6 таблиц, настроены первичные и внешние ключи, ограничения целостности, добавлены тестовые данные и описание нормализации до 3НФ. | `demo/lab1.sql` |
 | 2 | ... | `demo/lab2.sql` |
 | 3 | ... | `demo/lab3.sql` |
 | 4 | ... | `demo/lab4.sql`, `demo/race.sql`, `demo/race_fixed.sql` |
