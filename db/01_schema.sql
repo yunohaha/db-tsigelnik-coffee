@@ -10,6 +10,13 @@
 --     seats integer NOT NULL CHECK (seats > 0)
 -- );
 
+CREATE TYPE order_status AS ENUM (
+    'new',
+    'preparing',
+    'completed',
+    'cancelled'
+);
+
 CREATE TABLE coffee_shops (
     id       INTEGER     GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     name     TEXT        NOT NULL UNIQUE,
@@ -34,14 +41,15 @@ CREATE TABLE menu_items (
                                         CHECK (sugar_required_g >= 0)
 );
 
+
 CREATE TABLE orders (
     id                INTEGER          GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     coffee_shop_id    INTEGER          NOT NULL REFERENCES coffee_shops(id),
     barista_id        INTEGER          NOT NULL REFERENCES baristas(id),
-    created_at        TIMESTAMP        NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    status            TEXT             NOT NULL
-                                       CHECK (status IN ('new', 'preparing', 'completed', 'cancelled'))
+    created_at        TIMESTAMPTZ      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    status            order_status     NOT NULL DEFAULT 'new'
 );
+
 
 CREATE TABLE order_items (
     id               INTEGER         GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
