@@ -72,20 +72,6 @@ id integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY
 - 1000+ строк, созданных скриптом: `generate_series` в `db/03_generate.sql` или Faker в `scripts/`.
 - У каждого внешнего ключа явно указан `ON DELETE` (`CASCADE`, `RESTRICT` или `SET NULL`). В README таблица: связь, выбранное поведение, причина.
 
-## Как проверить
-
-```bash
-dbcheck --lab 1 --stars
-dbcheck --lab 1 --fresh          # на базе, пересозданной с нуля
-dbcheck run demo/lab1.sql        # сценарий по шагам
-```
-
-## Сдача
-
-1. `docker compose up -d`.
-2. `dbcheck --lab 1`.
-3. Показать ER-диаграмму в README и объяснить, какая таблица связующая.
-4. Ответить на вопрос из списка ниже.
 
 ## Подсказки
 
